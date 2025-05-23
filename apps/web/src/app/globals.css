@@ -75,6 +75,7 @@
 }
 
 @theme inline {
+  --font-satoshi: var(--font-satoshi);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --color-background: var(--background);
