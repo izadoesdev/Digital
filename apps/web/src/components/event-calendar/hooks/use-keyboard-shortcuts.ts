@@ -1,8 +1,9 @@
 import { useEffect } from "react";
-import { shouldIgnoreKeyboardEvent } from "../utils";
-import { KEYBOARD_SHORTCUTS } from "../calendar-constants";
-import { useCalendarContext } from "@/contexts/calendar-context";
 import { addDays, addMonths, startOfMonth, subDays, subMonths } from "date-fns";
+
+import { useCalendarContext } from "@/contexts/calendar-context";
+import { KEYBOARD_SHORTCUTS } from "../calendar-constants";
+import { shouldIgnoreKeyboardEvent } from "../utils";
 
 interface UseKeyboardShortcutsProps {
   isEventDialogOpen: boolean;
