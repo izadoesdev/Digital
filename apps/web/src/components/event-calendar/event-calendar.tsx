@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useAtom } from "jotai";
+import { useHotkeysContext } from "react-hotkeys-hook";
 
 import { viewPreferencesAtom } from "@/atoms";
 import {
@@ -14,7 +15,6 @@ import {
   filterPastEvents,
   useEventDialog,
   useEventOperations,
-  useKeyboardShortcuts,
 } from "@/components/event-calendar";
 import { cn } from "@/lib/utils";
 import { CalendarContent } from "./calendar-content";
@@ -59,9 +59,15 @@ export function EventCalendar({
       onOperationComplete: handleDialogClose,
     });
 
-  useKeyboardShortcuts({
-    isEventDialogOpen,
-  });
+  const { enableScope, disableScope } = useHotkeysContext();
+
+  useEffect(() => {
+    if (isEventDialogOpen) {
+      disableScope("calendar");
+    } else {
+      enableScope("calendar");
+    }
+  }, [isEventDialogOpen, enableScope, disableScope]);
 
   return (
     <div
