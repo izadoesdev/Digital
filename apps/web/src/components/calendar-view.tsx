@@ -112,6 +112,7 @@ function useCalendarActions() {
             colorId: "1",
             status: undefined,
             htmlLink: undefined,
+            calendarId: "primary"
           };
 
           return {
