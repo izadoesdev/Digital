@@ -10,15 +10,20 @@ import {
   EventGap,
   EventHeight,
   WeekCellsHeight,
+} from "@/components/event-calendar";
+import {
   filterPastEvents,
   filterVisibleEvents,
-  useEventDialog,
-  useEventOperations,
-} from "@/components/event-calendar";
+} from "@/components/event-calendar/utils";
 import { cn } from "@/lib/utils";
 import { CalendarContent } from "./calendar-content";
 import { CalendarHeader } from "./calendar-header";
-import { useCalendarsVisibility, useViewPreferences } from "./hooks";
+import {
+  useCalendarsVisibility,
+  useEventDialog,
+  useEventOperations,
+  useViewPreferences,
+} from "./hooks";
 
 export interface EventCalendarProps {
   events?: CalendarEvent[];
