@@ -1,6 +1,4 @@
-import type { LucideProps } from "lucide-react";
-
-export function Logo(props: LucideProps) {
+export function Logo(props: React.HTMLAttributes<SVGElement>) {
   return (
     <svg
       width="72"

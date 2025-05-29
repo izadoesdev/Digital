@@ -1,4 +1,5 @@
-import { Logo } from "@/components/branding/logo";
+import { Discord, GitHub, Logo, Twitter } from "@/components/icons";
+import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ui/theme-toggle";
 
 export function Header() {
@@ -7,27 +8,39 @@ export function Header() {
       <div className="mx-auto flex w-full max-w-7xl flex-row items-center justify-between">
         <Logo />
 
-        <nav className="flex flex-row items-center justify-center gap-1.25 text-muted-foreground">
-          <span className="hidden text-sm md:block">Star us on</span>
+        <nav className="flex flex-row items-center justify-center gap-1.5">
+          <Button asChild variant="ghost" size="sm">
+            <a
+              href="https://github.com/jeanmeijer/analog"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <GitHub className="fill-primary" />
+              <span className="sr-only">GitHub</span>
+            </a>
+          </Button>
 
-          <a
-            href="https://github.com/jeanmeijer/analog"
-            className="text-sm text-primary underline underline-offset-2 transition-colors hover:text-primary/80"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Github
-          </a>
+          <Button asChild variant="ghost" size="sm">
+            <a
+              href="https://x.com/analogdotnow"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Twitter className="fill-primary" />
+              <span className="sr-only">Twitter</span>
+            </a>
+          </Button>
 
-          <span className="hidden text-sm md:block">and follow on</span>
-          <a
-            className="text-sm text-primary underline underline-offset-2 transition-colors hover:text-primary/80"
-            href="https://x.com/analogdotnow"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            X (Twitter)
-          </a>
+          <Button asChild variant="ghost" size="sm">
+            <a
+              href="https://discord.gg/K3AsABDKUm"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Discord className="fill-primary" />
+              <span className="sr-only">Discord</span>
+            </a>
+          </Button>
 
           <ModeToggle />
         </nav>

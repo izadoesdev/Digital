@@ -1,4 +1,4 @@
-import { Logo } from "./branding/logo";
+import { Logo } from "@/components/icons";
 
 export function Footer() {
   return (

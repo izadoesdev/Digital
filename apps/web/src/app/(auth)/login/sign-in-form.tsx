@@ -5,7 +5,7 @@ import Link from "next/link";
 
 import { authClient } from "@repo/auth/client";
 
-import { Google } from "@/components/icons/google";
+import { Google } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import {
   Card,
