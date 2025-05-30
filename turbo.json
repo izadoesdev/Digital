@@ -13,7 +13,9 @@
         "VERCEL_URL",
         "NEXT_PUBLIC_VERCEL_URL",
         "UPSTASH_REDIS_REST_URL",
-        "UPSTASH_REDIS_REST_TOKEN"
+        "UPSTASH_REDIS_REST_TOKEN",
+        "SIMPLE_ANALYTICS_HOSTNAME",
+        "NEXT_PUBLIC_SIMPLE_ANALYTICS_HOSTNAME"
       ],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
