@@ -61,18 +61,6 @@ export const calendarProcedure = protectedProcedure.use(
     try {
       const allAccounts = await getAllAccounts(ctx.user, ctx.headers);
 
-      const activeAccount = allAccounts.find(
-        (account) => account.id === ctx.user.defaultAccountId,
-      );
-
-      if (!activeAccount) {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "No active account set",
-        });
-      }
-
-      const calendarClient = accountToProvider(activeAccount);
       const allCalendarClients = allAccounts.map((account) => ({
         account,
         client: accountToProvider(account),
@@ -80,10 +68,6 @@ export const calendarProcedure = protectedProcedure.use(
 
       return next({
         ctx: {
-          // Single provider access (for creating events, etc.)
-          calendarClient,
-          activeAccount,
-
           // Multiple provider access (for listing all calendars/events)
           allCalendarClients,
           allAccounts,
