@@ -23,6 +23,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useTRPC } from "@/lib/trpc/client";
 
 function useUser() {
@@ -34,7 +35,7 @@ export function NavUser() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const { data: user } = useUser();
+  const { data: user, isLoading } = useUser();
   const { theme, setTheme } = useTheme();
 
   const toggleTheme = () => {
@@ -44,6 +45,10 @@ export function NavUser() {
       setTheme("dark");
     }
   };
+
+  if (isLoading) {
+    return <NavUserSkeleton />;
+  }
 
   return (
     <SidebarMenu>
@@ -124,6 +129,22 @@ export function NavUser() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+      </SidebarMenuItem>
+    </SidebarMenu>
+  );
+}
+
+export function NavUserSkeleton() {
+  return (
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <div className="flex items-center gap-2">
+          <Skeleton className="animate-shimmer size-8 rounded-lg bg-neutral-500/20" />
+          <div className="flex-1 space-y-1">
+            <Skeleton className="animate-shimmer rounded- h-4 w-full bg-neutral-500/20" />
+            <Skeleton className="animate-shimmer rounded- h-2 w-full bg-neutral-500/20" />
+          </div>
+        </div>
       </SidebarMenuItem>
     </SidebarMenu>
   );
