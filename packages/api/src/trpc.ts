@@ -6,7 +6,7 @@ import { ZodError } from "zod";
 import { auth } from "@repo/auth/server";
 import { db } from "@repo/db";
 
-import { accountToProvider } from "./providers";
+import { accountToProvider, accountToTasksProvider } from "./providers";
 import { getAccounts } from "./utils/accounts";
 import { superjson } from "./utils/superjson";
 
@@ -73,6 +73,33 @@ export const calendarProcedure = protectedProcedure.use(
       return next({
         ctx: {
           ...ctx,
+          providers,
+          accounts,
+        },
+      });
+    } catch (error) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  },
+);
+
+
+
+export const taskProcedure = protectedProcedure.use(
+  async ({ ctx, next }) => {
+    try {
+      const accounts = await getAccounts(ctx.user, ctx.headers);
+
+      const providers = accounts.map((account) => ({
+        account,
+        client: accountToTasksProvider(account),
+      }));
+
+      return next({
+        ctx: {
           providers,
           accounts,
         },
