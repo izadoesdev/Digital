@@ -47,5 +47,4 @@ Add screenshots or recordings here to help reviewers understand your changes.
 
 (Optional) Add anything else you'd like to share.
 
-
 _By submitting, I confirm I understand and stand behind this code. If AI was used, I’ve reviewed and verified everything myself._
