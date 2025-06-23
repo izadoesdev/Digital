@@ -29,9 +29,20 @@ export interface CalendarEvent {
   status?: string;
   url?: string;
   color?: string;
+  reminders?: Reminders;
   providerId: string;
   accountId: string;
   calendarId: string;
+}
+
+export interface Reminder {
+  method?: string;
+  duration: Temporal.Duration;
+}
+
+export interface Reminders {
+  useDefault?: boolean;
+  overrides?: Reminder[];
 }
 
 export interface CalendarProvider {

@@ -1,7 +1,7 @@
 import { Temporal } from "temporal-polyfill";
 
 import { CreateEventInput, UpdateEventInput } from "../../schemas/events";
-import { Calendar, CalendarEvent } from "../interfaces";
+import { Calendar, CalendarEvent, type Reminders } from "../interfaces";
 import {
   GoogleCalendarCalendarListEntry,
   GoogleCalendarDate,
@@ -51,6 +51,19 @@ interface ParsedGoogleCalendarEventOptions {
   event: GoogleCalendarEvent;
 }
 
+function parseReminders(
+  reminders?: GoogleCalendarEvent["reminders"],
+): Reminders | undefined {
+  if (!reminders) return undefined;
+  return {
+    useDefault: reminders.useDefault,
+    overrides: reminders.overrides?.map((o) => ({
+      method: o.method,
+      duration: Temporal.Duration.from({ minutes: o.minutes! }),
+    })),
+  };
+}
+
 export function parseGoogleCalendarEvent({
   calendarId,
   accountId,
@@ -73,6 +86,7 @@ export function parseGoogleCalendarEvent({
     location: event.location,
     status: event.status,
     url: event.htmlLink,
+    reminders: parseReminders(event.reminders),
     providerId: "google",
     accountId,
     calendarId,
@@ -89,6 +103,15 @@ export function toGoogleCalendarEvent(
     location: event.location,
     start: toGoogleCalendarDate(event.start),
     end: toGoogleCalendarDate(event.end),
+    reminders: event.reminders
+      ? {
+          useDefault: event.reminders.useDefault,
+          overrides: event.reminders.overrides?.map((o) => ({
+            method: o.method,
+            minutes: o.duration.total({ unit: "minutes" }),
+          })),
+        }
+      : undefined,
   };
 }
 

@@ -1,4 +1,5 @@
 import {
+  zDurationInstance,
   zInstantInstance,
   zPlainDateInstance,
   zZonedDateTimeInstance,
@@ -19,6 +20,19 @@ export const createEventInputSchema = z.object({
   description: z.string().optional(),
   location: z.string().optional(),
   color: z.string().optional(),
+  reminders: z
+    .object({
+      useDefault: z.boolean().optional(),
+      overrides: z
+        .array(
+          z.object({
+            method: z.string().optional(),
+            duration: zDurationInstance,
+          }),
+        )
+        .optional(),
+    })
+    .optional(),
   accountId: z.string(),
   calendarId: z.string(),
 });

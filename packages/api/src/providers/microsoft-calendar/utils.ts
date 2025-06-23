@@ -5,7 +5,7 @@ import type {
 import { Temporal } from "temporal-polyfill";
 
 import { CreateEventInput, UpdateEventInput } from "../../schemas/events";
-import type { Calendar, CalendarEvent } from "../interfaces";
+import type { Calendar, CalendarEvent, Reminders } from "../interfaces";
 
 export function toMicrosoftDate(
   value: Temporal.PlainDate | Temporal.Instant | Temporal.ZonedDateTime,
@@ -48,6 +48,17 @@ function parseDateTime(dateTime: string, timeZone: string) {
   return instant.toZonedDateTimeISO(timeZone);
 }
 
+function parseReminders(event: MicrosoftEvent): Reminders | undefined {
+  if (!event.isReminderOn) return undefined;
+
+  const minutes = event.reminderMinutesBeforeStart;
+  if (minutes === undefined) return undefined;
+
+  return {
+    overrides: [{ duration: Temporal.Duration.from({ minutes }) }],
+  };
+}
+
 export function parseMicrosoftEvent(event: MicrosoftEvent): CalendarEvent {
   const { start, end, isAllDay } = event;
 
@@ -70,6 +81,7 @@ export function parseMicrosoftEvent(event: MicrosoftEvent): CalendarEvent {
     status: event.showAs || undefined,
     url: event.webLink || undefined,
     color: undefined,
+    reminders: parseReminders(event),
     providerId: "microsoft",
     accountId: "",
     calendarId: "",
@@ -86,6 +98,15 @@ export function toMicrosoftEvent(event: CreateEventInput | UpdateEventInput) {
     end: toMicrosoftDate(event.end),
     isAllDay: event.allDay ?? false,
     location: event.location ? { displayName: event.location } : undefined,
+    ...(event.reminders
+      ? {
+          isReminderOn: true,
+          reminderMinutesBeforeStart:
+            event.reminders.overrides?.[0]?.duration.total({
+              unit: "minutes",
+            }) ?? 0,
+        }
+      : {}),
   };
 }
 
