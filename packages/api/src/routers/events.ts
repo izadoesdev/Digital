@@ -97,8 +97,10 @@ export const eventsRouter = createTRPCRouter({
         });
       }
 
+      const sourceCalendarId = input.sourceCalendarId ?? input.calendarId;
+
       const event = await provider.client.updateEvent(
-        input.calendarId,
+        sourceCalendarId,
         input.id,
         input,
       );

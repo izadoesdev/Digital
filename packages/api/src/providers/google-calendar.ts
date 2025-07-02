@@ -132,15 +132,21 @@ export class GoogleCalendarProvider implements CalendarProvider {
     event: UpdateEventInput,
   ): Promise<CalendarEvent> {
     return this.withErrorHandler("updateEvent", async () => {
-      const existingEvent = await this.client.calendars.events.retrieve(
-        eventId,
-        {
+      let currentEvent = await this.client.calendars.events.retrieve(eventId, {
+        calendarId,
+      });
+
+      // Move the event if the destination calendar differs from the source
+      if (event.calendarId !== calendarId) {
+        currentEvent = await this.client.calendars.events.move(eventId, {
           calendarId,
-        },
-      );
+          destination: event.calendarId,
+        });
+        calendarId = event.calendarId;
+      }
 
       const updatedEvent = await this.client.calendars.events.update(eventId, {
-        ...existingEvent,
+        ...currentEvent,
         calendarId,
         ...toGoogleCalendarEvent(event),
       });

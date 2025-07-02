@@ -43,6 +43,11 @@ export const createEventInputSchema = z.object({
 
 export const updateEventInputSchema = createEventInputSchema.extend({
   id: z.string(),
+  /**
+   * The calendar where the event currently resides. If omitted, the value of
+   * `calendarId` will be used.
+   */
+  sourceCalendarId: z.string().optional(),
   metadata: z.union([microsoftMetadataSchema, googleMetadataSchema]).optional(),
 });
 
