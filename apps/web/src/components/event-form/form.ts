@@ -34,7 +34,7 @@ export const formSchema = z.object({
       type: z.enum(["required", "optional", "resource"]).optional(),
     }),
   ),
-  providerId: z.enum(["google", "microsoft"]),
+  providerId: z.enum(["google", "microsoft"]).optional(),
 });
 
 export type FormValues = z.infer<typeof formSchema>;
