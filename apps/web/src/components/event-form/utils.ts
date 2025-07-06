@@ -158,7 +158,7 @@ export function toCalendarEvent({
     allDay: values.isAllDay,
     calendarId: values.calendar.calendarId,
     accountId: values.calendar.accountId,
-    providerId: values.providerId,
+    providerId: values.providerId as "google" | "microsoft",
     start: values.isAllDay ? values.start.toPlainDate() : values.start,
     end: values.isAllDay ? values.end.toPlainDate() : values.end,
     color: calendar?.color ?? undefined,
