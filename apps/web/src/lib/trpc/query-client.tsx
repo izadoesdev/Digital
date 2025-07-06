@@ -11,10 +11,11 @@ export function makeQueryClient() {
       queries: {
         // With SSR, we usually want to set some default staleTime
         // above 0 to avoid refetching immediately on the client
-        staleTime: 60 * 1000,
+        staleTime: 60 * 1000, // 1 minute
         refetchOnReconnect: "always",
         refetchOnWindowFocus: "always",
         refetchOnMount: "always",
+        gcTime: 1000 * 60 * 60 * 24 * 7, // 1 week
       },
       dehydrate: {
         serializeData: SuperJSON.serialize,
