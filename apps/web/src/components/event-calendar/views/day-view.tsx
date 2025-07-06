@@ -276,6 +276,8 @@ export function DayView({
     "day",
   );
 
+  const { use12Hour } = useCalendarSettings();
+
   return (
     <div data-slot="day-view" className="contents" ref={containerRef}>
       {showAllDaySection && (
@@ -327,7 +329,7 @@ export function DayView({
             >
               {index > 0 && (
                 <span className="absolute -top-3 left-0 flex h-6 w-16 max-w-full items-center justify-end bg-background pe-2 text-[10px] text-muted-foreground/70 sm:pe-4 sm:text-xs">
-                  {format(hour, "h a")}
+                  {use12Hour ? format(hour, "h a") : format(hour, "HH:mm")}
                 </span>
               )}
             </div>
