@@ -66,6 +66,8 @@ export function compareTemporal(
   );
 }
 
-export function toDateWeekStartsOn(weekStartsOn: number): 0 | 1 | 2 | 3 | 4 | 5 | 6 {
+export function toDateWeekStartsOn(
+  weekStartsOn: number,
+): 0 | 1 | 2 | 3 | 4 | 5 | 6 {
   return weekStartsOn === 7 ? 0 : (weekStartsOn as 0 | 1 | 2 | 3 | 4 | 5 | 6);
 }

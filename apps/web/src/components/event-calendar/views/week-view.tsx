@@ -438,7 +438,7 @@ function WeekViewTimeColumn() {
         >
           {index > 0 && (
             <span className="absolute -top-3 left-0 flex h-6 w-20 max-w-full items-center justify-end bg-background pe-2 text-[10px] font-medium text-muted-foreground/70 tabular-nums sm:pe-4 sm:text-xs">
-              {use12Hour ? format(hour, "h aa") : format(hour, "HH:mm")}
+              {use12Hour ? format(hour, "h aaa") : format(hour, "HH:mm")}
             </span>
           )}
         </div>
