@@ -39,6 +39,7 @@ import {
   useGridLayout,
   type EventCollectionForMonth,
 } from "@/components/event-calendar/hooks";
+import type { Action } from "@/components/event-calendar/hooks/use-event-operations";
 import { useMultiDayOverflow } from "@/components/event-calendar/hooks/use-multi-day-overflow";
 import { OverflowIndicator } from "@/components/event-calendar/overflow-indicator";
 import {
@@ -62,6 +63,7 @@ interface MonthViewContextType {
   onEventCreate: (draft: DraftEvent) => void;
   containerRef: React.RefObject<HTMLDivElement | null>;
   onEventUpdate: (event: CalendarEvent) => void;
+  dispatchAction: (action: Action) => void;
 }
 
 const MonthViewContext = createContext<MonthViewContextType | null>(null);
@@ -83,6 +85,7 @@ interface MonthViewProps {
   onEventSelect: (event: CalendarEvent) => void;
   onEventCreate: (draft: DraftEvent) => void;
   onEventUpdate: (event: CalendarEvent) => void;
+  dispatchAction: (action: Action) => void;
 }
 
 export function MonthView({
@@ -91,6 +94,7 @@ export function MonthView({
   onEventSelect,
   onEventCreate,
   onEventUpdate,
+  dispatchAction,
 }: MonthViewProps) {
   const settings = useCalendarSettings();
   const { days, weeks } = useMemo(() => {
@@ -136,6 +140,7 @@ export function MonthView({
     onEventCreate,
     containerRef,
     onEventUpdate,
+    dispatchAction,
   };
 
   const rows = weeks.length;
@@ -163,6 +168,7 @@ export function MonthView({
                 eventCollection={eventCollection}
                 onEventClick={handleEventClick}
                 onEventUpdate={onEventUpdate}
+                dispatchAction={dispatchAction}
                 settings={settings}
                 containerRef={
                   containerRef as React.RefObject<HTMLDivElement | null>
@@ -238,6 +244,7 @@ interface MonthViewWeekItemProps {
   eventCollection: EventCollectionForMonth;
   onEventClick: (event: CalendarEvent, e: React.MouseEvent) => void;
   onEventUpdate: (event: CalendarEvent) => void;
+  dispatchAction: (action: Action) => void;
   settings: CalendarSettings;
   containerRef: React.RefObject<HTMLDivElement | null>;
 }
@@ -250,6 +257,7 @@ function MonthViewWeek({
   eventCollection,
   onEventClick,
   onEventUpdate,
+  dispatchAction,
   settings,
   containerRef,
 }: MonthViewWeekItemProps) {
@@ -342,6 +350,7 @@ function MonthViewWeek({
                 settings={settings}
                 onEventClick={onEventClick}
                 onEventUpdate={onEventUpdate}
+                dispatchAction={dispatchAction}
                 containerRef={containerRef}
               />
             );
@@ -453,6 +462,7 @@ interface PositionedEventProps {
   settings: CalendarSettings;
   onEventClick: (event: CalendarEvent, e: React.MouseEvent) => void;
   onEventUpdate: (event: CalendarEvent) => void;
+  dispatchAction: (action: Action) => void;
   containerRef: React.RefObject<HTMLDivElement | null>;
   rows: number;
 }
@@ -464,6 +474,7 @@ function PositionedEvent({
   settings,
   onEventClick,
   onEventUpdate,
+  dispatchAction,
   containerRef,
   rows,
 }: PositionedEventProps) {
@@ -509,6 +520,7 @@ function PositionedEvent({
         isLastDay={isLastDay}
         onClick={(e) => onEventClick(evt, e)}
         onEventUpdate={onEventUpdate}
+        dispatchAction={dispatchAction}
         setIsDragging={setIsDragging}
         zIndex={isDragging ? 99999 : undefined}
         rows={rows}
