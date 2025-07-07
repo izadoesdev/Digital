@@ -3,7 +3,9 @@
 import React, { createContext, useContext, useMemo, useRef } from "react";
 import {
   addHours,
+  eachDayOfInterval,
   eachHourOfInterval,
+  endOfWeek,
   format,
   getHours,
   isSameDay,
@@ -14,7 +16,7 @@ import {
 } from "date-fns";
 import { Temporal } from "temporal-polyfill";
 
-import { toDate } from "@repo/temporal";
+import { toDate, toDateWeekStartsOn } from "@repo/temporal";
 
 import { useCalendarSettings, useViewPreferences } from "@/atoms";
 import {
@@ -34,7 +36,6 @@ import { OverflowIndicator } from "@/components/event-calendar/overflow-indicato
 import {
   filterDaysByWeekendPreference,
   getGridPosition,
-  getWeekDays,
   isWeekend,
   placeIntoLanes,
   type PositionedEvent,
@@ -84,9 +85,15 @@ export function WeekView({
   headerRef,
   ...props
 }: WeekViewProps) {
+  const settings = useCalendarSettings();
   const viewPreferences = useViewPreferences();
 
-  const allDays = useMemo(() => getWeekDays(currentDate), [currentDate]);
+  const allDays = useMemo(() => {
+    const weekStartsOn = toDateWeekStartsOn(settings.weekStartsOn);
+    const weekStart = startOfWeek(currentDate, { weekStartsOn });
+    const weekEnd = endOfWeek(currentDate, { weekStartsOn });
+    return eachDayOfInterval({ start: weekStart, end: weekEnd });
+  }, [currentDate, settings.weekStartsOn]);
 
   const visibleDays = useMemo(
     () => filterDaysByWeekendPreference(allDays, viewPreferences.showWeekends),
@@ -212,10 +219,10 @@ function WeekViewAllDaySection() {
   const viewPreferences = useViewPreferences();
   const settings = useCalendarSettings();
 
-  const weekStart = useMemo(
-    () => startOfWeek(currentDate, { weekStartsOn: 0 }),
-    [currentDate],
-  );
+  const weekStart = useMemo(() => {
+    const weekStartsOn = toDateWeekStartsOn(settings.weekStartsOn);
+    return startOfWeek(currentDate, { weekStartsOn });
+  }, [currentDate, settings.weekStartsOn]);
   const weekEnd = useMemo(() => allDays[allDays.length - 1]!, [allDays]);
   const allDayEvents = useMemo(() => {
     return eventCollection.type === "week" ? eventCollection.allDayEvents : [];
@@ -420,8 +427,7 @@ function WeekViewPositionedEvent({
 
 function WeekViewTimeColumn() {
   const { hours } = useWeekViewContext();
-
-  const timeFormat = "24";
+  const { use12Hour } = useCalendarSettings();
 
   return (
     <div className="grid auto-cols-fr border-r border-border/70">
@@ -431,10 +437,8 @@ function WeekViewTimeColumn() {
           className="relative min-h-[var(--week-cells-height)] border-b border-border/70 last:border-b-0"
         >
           {index > 0 && (
-            <span className="absolute -top-3 left-0 flex h-6 w-20 max-w-full items-center justify-end bg-background pe-2 text-[10px] font-medium text-muted-foreground/70 sm:pe-4 sm:text-xs">
-              {timeFormat === "24"
-                ? format(hour, "HH:mm")
-                : format(hour, "h aa")}
+            <span className="absolute -top-3 left-0 flex h-6 w-20 max-w-full items-center justify-end bg-background pe-2 text-[10px] font-medium text-muted-foreground/70 tabular-nums sm:pe-4 sm:text-xs">
+              {use12Hour ? format(hour, "h aaa") : format(hour, "HH:mm")}
             </span>
           )}
         </div>
