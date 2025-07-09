@@ -14,6 +14,7 @@ import {
   GoogleCalendarEvent,
   GoogleCalendarEventAttendee,
   GoogleCalendarEventAttendeeResponseStatus,
+  GoogleCalendarEventConferenceData,
   GoogleCalendarEventCreateParams,
 } from "./interfaces";
 
@@ -85,6 +86,7 @@ export function parseGoogleCalendarEvent({
     accountId,
     calendarId: calendar.id,
     readOnly: calendar.readOnly,
+    conferenceData: parseGoogleCalendarConferenceData(event.conferenceData),
   };
 }
 
@@ -98,6 +100,95 @@ export function toGoogleCalendarEvent(
     location: event.location,
     start: toGoogleCalendarDate(event.start),
     end: toGoogleCalendarDate(event.end),
+    conferenceData: event.conferenceData
+      ? toGoogleCalendarConferenceData(event.conferenceData)
+      : undefined,
+    // Required when creating/updating events with conference data
+    ...(event.conferenceData && { conferenceDataVersion: 1 }),
+  };
+}
+
+function toGoogleCalendarConferenceData(
+  conferenceData: NonNullable<CreateEventInput["conferenceData"]>,
+): GoogleCalendarEventConferenceData {
+  const entryPoints: GoogleCalendarEventConferenceData["entryPoints"] = [];
+
+  if (conferenceData.joinUrl) {
+    const videoEntryPoint: (typeof entryPoints)[0] = {
+      entryPointType: "video",
+      uri: conferenceData.joinUrl,
+    };
+
+    if (conferenceData.meetingCode) {
+      videoEntryPoint.meetingCode = conferenceData.meetingCode;
+      videoEntryPoint.accessCode = conferenceData.meetingCode;
+    }
+
+    if (conferenceData.password) {
+      videoEntryPoint.password = conferenceData.password;
+      videoEntryPoint.passcode = conferenceData.password;
+    }
+
+    if (conferenceData.joinUrl) {
+      try {
+        const url = new URL(conferenceData.joinUrl);
+        videoEntryPoint.label = url.hostname + url.pathname;
+      } catch {
+        videoEntryPoint.label = conferenceData.joinUrl;
+      }
+    }
+
+    entryPoints.push(videoEntryPoint);
+  }
+
+  if (conferenceData.phoneNumbers?.length) {
+    conferenceData.phoneNumbers.forEach((phoneNumber) => {
+      const phoneEntryPoint: (typeof entryPoints)[0] = {
+        entryPointType: "phone",
+        uri: phoneNumber.startsWith("tel:")
+          ? phoneNumber
+          : `tel:${phoneNumber}`,
+        label: phoneNumber,
+      };
+
+      if (conferenceData.meetingCode) {
+        phoneEntryPoint.accessCode = conferenceData.meetingCode;
+        phoneEntryPoint.pin = conferenceData.meetingCode;
+      }
+
+      entryPoints.push(phoneEntryPoint);
+    });
+  }
+
+  let conferenceSolutionType = "hangoutsMeet"; // Default to Google Meet
+  if (conferenceData.name) {
+    const lowerName = conferenceData.name.toLowerCase();
+    conferenceSolutionType = lowerName.includes("google")
+      ? "hangoutsMeet"
+      : "addOn";
+  }
+
+  return {
+    conferenceId: conferenceData.id,
+    conferenceSolution: {
+      name: conferenceData.name ?? "Google Meet",
+      key: {
+        type: conferenceSolutionType,
+      },
+    },
+    entryPoints: entryPoints.length > 0 ? entryPoints : undefined,
+    ...(conferenceData.extra && {
+      parameters: {
+        addOnParameters: {
+          parameters: Object.fromEntries(
+            Object.entries(conferenceData.extra).map(([key, value]) => [
+              key,
+              String(value),
+            ]),
+          ),
+        },
+      },
+    }),
   };
 }
 
@@ -162,6 +253,38 @@ function parseGoogleCalendarAttendeeType(
   }
 
   return "required";
+}
+
+function parseGoogleCalendarConferenceData(
+  conferenceData: GoogleCalendarEvent["conferenceData"],
+): CalendarEvent["conferenceData"] {
+  if (!conferenceData?.entryPoints?.length) {
+    return undefined;
+  }
+
+  const videoEntry = conferenceData.entryPoints.find(
+    (e) => e.entryPointType === "video" && e.uri,
+  );
+
+  const phoneNumbers = conferenceData.entryPoints
+    .filter((e) => e.entryPointType === "phone" && e.uri)
+    .map((e) => e.uri as string);
+
+  if (!videoEntry?.uri) {
+    return undefined;
+  }
+
+  const accessCode =
+    videoEntry.meetingCode ?? videoEntry.passcode ?? videoEntry.password;
+
+  return {
+    id: conferenceData.conferenceId,
+    name: conferenceData.conferenceSolution?.name ?? "Google Meet",
+    joinUrl: videoEntry.uri!,
+    meetingCode: accessCode ?? "",
+    phoneNumbers: phoneNumbers.length ? phoneNumbers : undefined,
+    password: accessCode,
+  };
 }
 
 export function parseGoogleCalendarAttendee(
