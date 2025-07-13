@@ -134,6 +134,7 @@ export function CalendarView({
 
   useEffect(() => {
     enableScope("calendar");
+    enableScope("event");
   }, [enableScope]);
 
   return (
