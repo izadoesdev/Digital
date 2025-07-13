@@ -4,40 +4,37 @@ import * as R from "remeda";
 
 import { compareTemporal } from "@repo/temporal";
 
-import { SelectedEvents, selectedEventsAtom } from "@/atoms";
-import { DraftEvent } from "@/lib/interfaces";
-import { CalendarEvent } from "../types";
-import {
-  showEventAddedToast,
-  showEventDeletedToast,
-  showEventMovedToast,
-  showEventUpdatedToast,
-} from "../utils";
-import { useCalendar } from "./use-calendar-actions";
+import { SelectedEvents, selectedEventsAtom } from "@/atoms/selected-events";
+import type { CalendarEvent, DraftEvent } from "@/lib/interfaces";
+import { useEvents } from "./use-events";
 
-// Types for optimistic reducer actions
 export type Action =
+  | { type: "draft"; event: DraftEvent }
+  | { type: "update"; event: CalendarEvent }
+  | { type: "select"; event: CalendarEvent }
+  | { type: "unselect"; eventId: string }
+  | { type: "delete"; eventId: string };
+
+export type OptimisticAction =
   | { type: "update"; event: CalendarEvent }
   | { type: "delete"; eventId: string };
 
-export function useEventOperations(onOperationComplete?: () => void) {
-  const { events, createEvent, updateEvent, deleteEvent } = useCalendar();
+export function useOptimisticEvents() {
+  const { events, createMutation, updateMutation, deleteMutation } =
+    useEvents();
   const [selectedEvents, setSelectedEvents] = useAtom(selectedEventsAtom);
 
-  // Transition state for concurrent UI feedback
   const [isPending, startTransition] = useTransition();
 
-  // Optimistic state handling to reflect changes instantly in the UI
   const [optimisticEvents, applyOptimistic] = useOptimistic(
     events,
-    (state: CalendarEvent[], action: Action) => {
+    (state: CalendarEvent[], action: OptimisticAction) => {
       if (action.type === "delete") {
         return state.filter((e) => e.id !== action.eventId);
       }
 
       const withoutEvent = state.filter((e) => e.id !== action.event.id);
 
-      // Remove old instance, re-insert respecting sort order
       const insertIdx = R.sortedIndexWith(
         withoutEvent,
         (item) => compareTemporal(item.start, action.event.start) < 0,
@@ -53,36 +50,40 @@ export function useEventOperations(onOperationComplete?: () => void) {
 
   const handleEventSave = useCallback(
     (event: CalendarEvent) => {
+      startTransition(() => applyOptimistic({ type: "update", event }));
+
       const exists = optimisticEvents.find((e) => e.id === event.id);
 
       if (!exists) {
-        startTransition(() => applyOptimistic({ type: "update", event }));
-
-        createEvent(event);
-        showEventAddedToast(event);
-        onOperationComplete?.();
+        createMutation.mutate(event);
         return;
       }
 
-      // Optimistically update UI
+      updateMutation.mutate(event);
+    },
+    [applyOptimistic, createMutation, optimisticEvents, updateMutation],
+  );
+
+  const asyncUpdateEvent = useCallback(
+    async (event: CalendarEvent) => {
       startTransition(() => applyOptimistic({ type: "update", event }));
 
-      updateEvent(event);
-      showEventUpdatedToast(event);
+      const exists = optimisticEvents.find((e) => e.id === event.id);
 
-      onOperationComplete?.();
+      if (!exists) {
+        await createMutation.mutateAsync(event);
+        return;
+      }
+
+      await updateMutation.mutateAsync(event);
     },
-    [
-      applyOptimistic,
-      createEvent,
-      onOperationComplete,
-      optimisticEvents,
-      updateEvent,
-    ],
+    [applyOptimistic, createMutation, optimisticEvents, updateMutation],
   );
 
   const handleEventDelete = useCallback(
     (eventId: string) => {
+      startTransition(() => applyOptimistic({ type: "delete", eventId }));
+
       const deletedEvent = optimisticEvents.find((e) => e.id === eventId);
 
       if (!deletedEvent) {
@@ -93,72 +94,43 @@ export function useEventOperations(onOperationComplete?: () => void) {
       // Remove from selected events first if it's selected
       setSelectedEvents((prev) => prev.filter((e) => e.id !== eventId));
 
-      // Optimistically remove event from UI
-      startTransition(() => applyOptimistic({ type: "delete", eventId }));
-
-      deleteEvent({
+      deleteMutation.mutate({
         accountId: deletedEvent.accountId,
         calendarId: deletedEvent.calendarId,
         eventId,
       });
-      showEventDeletedToast(deletedEvent);
-      onOperationComplete?.();
     },
     [
       applyOptimistic,
       optimisticEvents,
-      deleteEvent,
-      onOperationComplete,
+      deleteMutation,
       startTransition,
       setSelectedEvents,
     ],
   );
 
-  const handleEventMove = useCallback(
-    (updatedEvent: CalendarEvent) => {
-      // Optimistically move event in UI
-      startTransition(() =>
-        applyOptimistic({ type: "update", event: updatedEvent }),
-      );
-
-      updateEvent(updatedEvent);
-      showEventMovedToast(updatedEvent);
-    },
-    [applyOptimistic, startTransition, updateEvent],
-  );
-
-  const handleEventSelect = useCallback(
-    (event: CalendarEvent) => {
-      setSelectedEvents([]);
-      setSelectedEvents((prev) => {
-        const filtered = prev.filter((e) => e.id !== event.id);
-        return [event, ...filtered];
-      });
-    },
-    [setSelectedEvents],
-  );
-
-  const handleEventCreate = useCallback(
-    (draft: DraftEvent) => {
-      setSelectedEvents([]);
-      setSelectedEvents((prev) => [draft, ...prev]);
-    },
-    [setSelectedEvents],
-  );
-
-  const handleDialogClose = useCallback(() => {
-    setSelectedEvents([]);
-  }, [setSelectedEvents]);
-
   const dispatchAction = useCallback(
     (action: Action) => {
-      if (action.type === "update") {
+      if (action.type === "draft" || action.type === "select") {
+        setSelectedEvents([action.event]);
+      } else if (action.type === "unselect") {
+        setSelectedEvents([]);
+      } else if (action.type === "update") {
         handleEventSave(action.event);
       } else if (action.type === "delete") {
         handleEventDelete(action.eventId);
       }
     },
-    [handleEventSave, handleEventDelete],
+    [handleEventSave, handleEventDelete, setSelectedEvents],
+  );
+
+  const dispatchAsyncAction = useCallback(
+    async (action: Action) => {
+      if (action.type === "update") {
+        await asyncUpdateEvent(action.event);
+      }
+    },
+    [asyncUpdateEvent],
   );
 
   // Derive optimistic selected events from optimistic events - this ensures perfect sync
@@ -178,12 +150,7 @@ export function useEventOperations(onOperationComplete?: () => void) {
     events: optimisticEvents,
     selectedEvents: optimisticSelectedEvents,
     isPending,
-    handleEventSave,
-    handleEventDelete,
-    handleEventMove,
-    handleEventSelect,
-    handleDialogClose,
-    handleEventCreate,
     dispatchAction,
+    dispatchAsyncAction,
   };
 }

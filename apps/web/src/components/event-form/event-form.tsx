@@ -8,6 +8,7 @@ import {
   CalendarSettings,
   useCalendarSettings,
 } from "@/atoms/calendar-settings";
+import type { Action } from "@/components/event-calendar/hooks/use-optimistic-events";
 import {
   createDefaultEvent,
   parseCalendarEvent,
@@ -33,12 +34,6 @@ import { DateInputSection } from "./date-input-section";
 import { DescriptionField } from "./description-field";
 import { FormValues, defaultValues, formSchema, useAppForm } from "./form";
 import { RepeatSelect } from "./repeat-select";
-
-interface EventFormProps {
-  selectedEvent?: CalendarEvent | DraftEvent;
-  handleEventSave: (event: CalendarEvent) => void;
-  defaultCalendar?: Calendar;
-}
 
 interface GetDefaultValuesOptions {
   event?: CalendarEvent | DraftEvent;
@@ -73,9 +68,15 @@ function getDefaultValues({
   return parseCalendarEvent({ event, settings });
 }
 
+interface EventFormProps {
+  selectedEvent?: CalendarEvent | DraftEvent;
+  dispatchAsyncAction: (action: Action) => Promise<void>;
+  defaultCalendar?: Calendar;
+}
+
 export function EventForm({
   selectedEvent,
-  handleEventSave,
+  dispatchAsyncAction,
   defaultCalendar,
 }: EventFormProps) {
   const settings = useCalendarSettings();
@@ -84,6 +85,7 @@ export function EventForm({
   const query = useQuery(trpc.calendars.list.queryOptions());
 
   const [event, setEvent] = React.useState(selectedEvent);
+
   const disabled = event?.readOnly;
 
   const form = useAppForm({
@@ -100,7 +102,10 @@ export function EventForm({
         return;
       }
 
-      handleEventSave(toCalendarEvent({ values: value, event, calendar }));
+      await dispatchAsyncAction({
+        type: "update",
+        event: toCalendarEvent({ values: value, event, calendar }),
+      });
     },
     listeners: {
       onBlur: async ({ formApi }) => {

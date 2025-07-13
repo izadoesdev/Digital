@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useRef } from "react";
+import * as React from "react";
 import {
   addHours,
   areIntervalsOverlapping,
@@ -26,18 +26,14 @@ import {
 } from "@/components/event-calendar";
 import { EndHour, StartHour } from "@/components/event-calendar/constants";
 import { useCurrentTimeIndicator } from "@/components/event-calendar/hooks";
-import type { Action } from "@/components/event-calendar/hooks/use-event-operations";
+import type { Action } from "@/components/event-calendar/hooks/use-optimistic-events";
 import { isMultiDayEvent } from "@/components/event-calendar/utils";
-import { DraftEvent } from "@/lib/interfaces";
 import { cn } from "@/lib/utils";
 import { createDraftEvent } from "@/lib/utils/calendar";
 
 interface DayViewProps {
   currentDate: Date;
   events: CalendarEvent[];
-  onEventSelect: (event: CalendarEvent) => void;
-  onEventCreate: (draft: DraftEvent) => void;
-  onEventUpdate: (event: CalendarEvent) => void;
   dispatchAction: (action: Action) => void;
 }
 
@@ -53,7 +49,6 @@ interface PositionedEvent {
 interface PositionedEventProps {
   positionedEvent: PositionedEvent;
   onEventClick: (event: CalendarEvent, e: React.MouseEvent) => void;
-  onEventUpdate: (event: CalendarEvent) => void;
   dispatchAction: (action: Action) => void;
   containerRef: React.RefObject<HTMLDivElement | null>;
 }
@@ -61,7 +56,6 @@ interface PositionedEventProps {
 function PositionedEvent({
   positionedEvent,
   onEventClick,
-  onEventUpdate,
   dispatchAction,
   containerRef,
 }: PositionedEventProps) {
@@ -84,7 +78,6 @@ function PositionedEvent({
         event={positionedEvent.event}
         view="day"
         onClick={(e) => onEventClick(positionedEvent.event, e)}
-        onEventUpdate={onEventUpdate}
         dispatchAction={dispatchAction}
         showTime
         height={positionedEvent.height}
@@ -95,16 +88,9 @@ function PositionedEvent({
   );
 }
 
-export function DayView({
-  currentDate,
-  events,
-  onEventSelect,
-  onEventCreate,
-  onEventUpdate,
-  dispatchAction,
-}: DayViewProps) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const hours = useMemo(() => {
+export function DayView({ currentDate, events, dispatchAction }: DayViewProps) {
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
+  const hours = React.useMemo(() => {
     const dayStart = startOfDay(currentDate);
     return eachHourOfInterval({
       start: addHours(dayStart, StartHour),
@@ -114,7 +100,7 @@ export function DayView({
 
   const settings = useCalendarSettings();
 
-  const dayEvents = useMemo(() => {
+  const dayEvents = React.useMemo(() => {
     return events
       .filter((event) => {
         const eventStart = toDate({
@@ -145,7 +131,7 @@ export function DayView({
   }, [currentDate, events, settings.defaultTimeZone]);
 
   // Filter all-day events
-  const allDayEvents = useMemo(() => {
+  const allDayEvents = React.useMemo(() => {
     return dayEvents.filter((event) => {
       // Include explicitly marked all-day events or multi-day events
       return event.allDay || isMultiDayEvent(event);
@@ -153,7 +139,7 @@ export function DayView({
   }, [dayEvents]);
 
   // Get only single-day time-based events
-  const timeEvents = useMemo(() => {
+  const timeEvents = React.useMemo(() => {
     return dayEvents.filter((event) => {
       // Exclude all-day events and multi-day events
       return !event.allDay && !isMultiDayEvent(event);
@@ -161,7 +147,7 @@ export function DayView({
   }, [dayEvents]);
 
   // Process events to calculate positions
-  const positionedEvents = useMemo(() => {
+  const positionedEvents = React.useMemo(() => {
     const result: PositionedEvent[] = [];
     const dayStart = startOfDay(currentDate);
 
@@ -273,7 +259,7 @@ export function DayView({
 
   const handleEventClick = (event: CalendarEvent, e: React.MouseEvent) => {
     e.stopPropagation();
-    onEventSelect(event);
+    dispatchAction({ type: "select", event });
   };
 
   const showAllDaySection = allDayEvents.length > 0;
@@ -349,7 +335,6 @@ export function DayView({
               key={positionedEvent.event.id}
               positionedEvent={positionedEvent}
               onEventClick={handleEventClick}
-              onEventUpdate={onEventUpdate}
               dispatchAction={dispatchAction}
               containerRef={containerRef}
             />
@@ -407,7 +392,10 @@ export function DayView({
 
                         const end = start.add({ minutes: 15 });
 
-                        onEventCreate(createDraftEvent({ start, end }));
+                        dispatchAction({
+                          type: "draft",
+                          event: createDraftEvent({ start, end }),
+                        });
                       }}
                     />
                   );

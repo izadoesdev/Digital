@@ -10,11 +10,11 @@ import {
 } from "@/atoms/calendar-settings";
 import { AppSidebar } from "@/components/app-sidebar";
 import { CalendarView } from "@/components/calendar-view";
-import { useEventOperations } from "@/components/event-calendar";
 import { EventForm } from "@/components/event-form/event-form";
 import { RightSidebar } from "@/components/right-sidebar";
 import { SidebarInset } from "@/components/ui/sidebar";
 import { useTRPC } from "@/lib/trpc/client";
+import { useOptimisticEvents } from "./event-calendar/hooks/use-optimistic-events";
 
 export function CalendarLayout() {
   const [, setSettings] = useAtom(calendarSettingsAtom);
@@ -38,15 +38,8 @@ function IsolatedCalendarLayout() {
   const trpc = useTRPC();
   const query = useQuery(trpc.calendars.list.queryOptions());
 
-  const {
-    events,
-    selectedEvents,
-    handleEventMove,
-    handleEventSelect,
-    handleEventSave,
-    handleEventCreate,
-    dispatchAction,
-  } = useEventOperations();
+  const { events, selectedEvents, dispatchAction, dispatchAsyncAction } =
+    useOptimisticEvents();
 
   return (
     <>
@@ -55,9 +48,6 @@ function IsolatedCalendarLayout() {
           <CalendarView
             className="grow"
             events={events}
-            handleEventMove={handleEventMove}
-            handleEventSelect={handleEventSelect}
-            handleEventCreate={handleEventCreate}
             dispatchAction={dispatchAction}
           />
         </div>
@@ -65,7 +55,7 @@ function IsolatedCalendarLayout() {
       <RightSidebar variant="inset" side="right">
         <EventForm
           selectedEvent={selectedEvents[0]}
-          handleEventSave={handleEventSave}
+          dispatchAsyncAction={dispatchAsyncAction}
           defaultCalendar={query.data?.defaultCalendar}
         />
       </RightSidebar>
