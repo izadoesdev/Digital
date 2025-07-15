@@ -23,24 +23,6 @@ export function groupArrayIntoChunks<T>(array: T[], chunkSize: number): T[][] {
   return chunks;
 }
 
-export function getBrowserTimezone() {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone;
-}
-
-export function getBrowserLocale() {
-  if (navigator.languages && navigator.languages.length > 0) {
-    return navigator.languages;
-  }
-  return [navigator.language];
-}
-
-export function getPrimaryBrowserLocale() {
-  if (navigator.languages && navigator.languages.length > 0) {
-    return navigator.languages[0];
-  }
-  return navigator.language;
-}
-
 export function getConferencingProviderId(uri?: string) {
   try {
     if (!uri) {
