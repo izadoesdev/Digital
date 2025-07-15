@@ -47,6 +47,7 @@ export function Tasks() {
   const { data, isLoading } = useTaskList();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const [openAddTask, setOpenAddTask] = useState<{ accountId: string; categoryId: string } | null>(null);
 
   const updateTaskMutation = useMutation(
     trpc.tasks.updateTask.mutationOptions({
@@ -116,10 +117,24 @@ export function Tasks() {
                               updateTaskMutation={updateTaskMutation}
                             />
                           ))}
-                          <AddTask
-                            accountId={account.id}
-                            categories={groupedCategories.map(cat => ({ id: cat.id, title: cat.title }))}
-                          />
+                          {openAddTask?.accountId === account.id && openAddTask?.categoryId === category.id ? (
+                            <AddTask
+                              accountId={account.id}
+                              categoryId={category.id}
+                              categories={groupedCategories.map(cat => ({ id: cat.id, title: cat.title }))}
+                              onSuccess={() => setOpenAddTask(null)}
+                              onCancel={() => setOpenAddTask(null)}
+                              isOpen={true}
+                            />
+                          ) : (
+                            <AddTask
+                              accountId={account.id}
+                              categoryId={category.id}
+                              categories={groupedCategories.map(cat => ({ id: cat.id, title: cat.title }))}
+                              onOpen={() => setOpenAddTask({ accountId: account.id, categoryId: category.id })}
+                              isOpen={false}
+                            />
+                          )}
                         </SidebarMenu>
                       </div>
                     ))}

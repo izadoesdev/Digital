@@ -21,22 +21,24 @@ import { toTaskRequest, getErrorMessage } from "./utils";
 interface TaskFormProps {
   accountId: string;
   categories: { id: string; title: string }[];
+  defaultCategoryId?: string;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
 interface GetDefaultValuesOptions {
   categories: { id: string; title: string }[];
+  defaultCategoryId?: string;
 }
 
-function getDefaultValues({ categories }: GetDefaultValuesOptions): TaskFormValues {
+function getDefaultValues({ categories, defaultCategoryId }: GetDefaultValuesOptions): TaskFormValues {
   return {
     ...defaultTaskValues,
-    categoryId: categories.length > 0 ? categories[0]?.id || "" : "",
+    categoryId: defaultCategoryId || (categories.length > 0 ? categories[0]?.id || "" : ""),
   };
 }
 
-export function TaskForm({ accountId, categories, onSuccess, onCancel }: TaskFormProps) {
+export function TaskForm({ accountId, categories, defaultCategoryId, onSuccess, onCancel }: TaskFormProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
@@ -50,9 +52,9 @@ export function TaskForm({ accountId, categories, onSuccess, onCancel }: TaskFor
   );
 
   const form = useAppForm({
-    defaultValues: getDefaultValues({ categories }),
+    defaultValues: getDefaultValues({ categories, defaultCategoryId }),
     validators: {
-      onBlur: taskFormSchema,
+      onChange: taskFormSchema,
     },
     onSubmit: async ({ value }) => {
       createTaskMutation.mutate({
@@ -101,7 +103,6 @@ export function TaskForm({ accountId, categories, onSuccess, onCancel }: TaskFor
                     name={field.name}
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
                     placeholder="Title"
                     className="border-none shadow-none rounded-md bg-transparent dark:bg-transparent focus:ring-0 dark:focus:ring-0 placeholder:text-neutral-400"
                     autoFocus
@@ -213,27 +214,31 @@ export function TaskForm({ accountId, categories, onSuccess, onCancel }: TaskFor
   );
 }
 
-export function AddTask({ accountId, categories }: {
+export function AddTask({ 
+  accountId, 
+  categoryId, 
+  categories, 
+  isOpen,
+  onOpen,
+  onSuccess,
+  onCancel
+}: {
   accountId: string;
+  categoryId: string;
   categories: { id: string; title: string }[];
+  isOpen: boolean;
+  onOpen?: () => void;
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }) {
-  const [isOpen, setIsOpen] = React.useState(false);
-
-  const handleSuccess = () => {
-    setIsOpen(false);
-  };
-
-  const handleCancel = () => {
-    setIsOpen(false);
-  };
-
   if (isOpen) {
     return (
       <TaskForm
         accountId={accountId}
         categories={categories}
-        onSuccess={handleSuccess}
-        onCancel={handleCancel}
+        defaultCategoryId={categoryId}
+        onSuccess={onSuccess}
+        onCancel={onCancel}
       />
     );
   }
@@ -241,7 +246,7 @@ export function AddTask({ accountId, categories }: {
   return (
     <SidebarMenuItem className="group/item">
       <SidebarMenuButton
-        onClick={() => setIsOpen(true)}
+        onClick={onOpen}
         className="hover:bg-neutral-600/20"
       >
         <div className="relative flex items-center">
