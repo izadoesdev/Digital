@@ -144,7 +144,7 @@ function fromIcsEvent(event: IcsEvent): CalendarEvent {
     url: event.url,
     color: undefined,
     readOnly: false,
-    providerId: "unknown",
+    providerId: "ics",
     accountId: "",
     calendarId: "",
   };
@@ -179,4 +179,36 @@ export function exportTimezone(timezone: IcsTimezone): string {
 
 export function importTimezone(ics: string): IcsTimezone {
   return convertIcsTimezone(undefined, ics);
+}
+
+export function detectIcsType(ics: string): "calendar" | "event" {
+  const normalizedIcs = ics.trim().toUpperCase();
+
+  // Check if it contains VCALENDAR wrapper
+  if (normalizedIcs.includes("BEGIN:VCALENDAR")) {
+    return "calendar";
+  }
+
+  // Check if it starts with VEVENT (single event without calendar wrapper)
+  if (normalizedIcs.includes("BEGIN:VEVENT")) {
+    return "event";
+  }
+
+  // Default to calendar if unclear
+  return "calendar";
+}
+
+export function importIcs(ics: string): {
+  type: "calendar" | "event";
+  events: CalendarEvent[];
+} {
+  const type = detectIcsType(ics);
+
+  if (type === "calendar") {
+    const events = importEvents(ics);
+    return { type, events };
+  } else {
+    const event = importEvent(ics);
+    return { type, events: [event] };
+  }
 }
