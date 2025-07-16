@@ -17,14 +17,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar {...props}>
       <SidebarContent className="relative flex flex-col">
-        <SidebarGroup className="sticky top-0 px-0 z-10 bg-sidebar">
+        <SidebarGroup className="sticky top-0 z-10 bg-sidebar px-0">
           <SidebarGroupContent>
             <DatePicker />
           </SidebarGroupContent>
         </SidebarGroup>
-        <SidebarGroup className="flex-1 flex flex-col min-h-0">
+        <SidebarGroup className="flex min-h-0 flex-1 flex-col">
           <SidebarGroupLabel>Tasks</SidebarGroupLabel>
-          <SidebarGroupContent className="flex-1 min-h-0">
+          <SidebarGroupContent className="min-h-0 flex-1">
             <ScrollArea className="h-full w-full">
               <Tasks />
             </ScrollArea>

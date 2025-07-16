@@ -2,21 +2,36 @@
 
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { X, CalendarIcon, Plus } from "lucide-react";
 import { format } from "date-fns";
+import { CalendarIcon, Plus, X } from "lucide-react";
 
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { Textarea } from "@/components/ui/textarea";
 import { useTRPC } from "@/lib/trpc/client";
 import { cn } from "@/lib/utils";
-import { TaskFormValues, defaultTaskValues, taskFormSchema, useAppForm } from "./form";
-import { toTaskRequest, getErrorMessage } from "./utils";
+import {
+  TaskFormValues,
+  defaultTaskValues,
+  taskFormSchema,
+  useAppForm,
+} from "./form";
+import { getErrorMessage, toTaskRequest } from "./utils";
 
 interface TaskFormProps {
   accountId: string;
@@ -31,14 +46,25 @@ interface GetDefaultValuesOptions {
   defaultCategoryId?: string;
 }
 
-function getDefaultValues({ categories, defaultCategoryId }: GetDefaultValuesOptions): TaskFormValues {
+function getDefaultValues({
+  categories,
+  defaultCategoryId,
+}: GetDefaultValuesOptions): TaskFormValues {
   return {
     ...defaultTaskValues,
-    categoryId: defaultCategoryId || (categories.length > 0 ? categories[0]?.id || "" : ""),
+    categoryId:
+      defaultCategoryId ||
+      (categories.length > 0 ? categories[0]?.id || "" : ""),
   };
 }
 
-export function TaskForm({ accountId, categories, defaultCategoryId, onSuccess, onCancel }: TaskFormProps) {
+export function TaskForm({
+  accountId,
+  categories,
+  defaultCategoryId,
+  onSuccess,
+  onCancel,
+}: TaskFormProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
@@ -48,7 +74,7 @@ export function TaskForm({ accountId, categories, defaultCategoryId, onSuccess, 
         queryClient.invalidateQueries({ queryKey: trpc.tasks.list.queryKey() });
         onSuccess?.();
       },
-    })
+    }),
   );
 
   const form = useAppForm({
@@ -78,13 +104,13 @@ export function TaskForm({ accountId, categories, defaultCategoryId, onSuccess, 
           variant="ghost"
           size="icon"
           onClick={handleCancel}
-          className="absolute top-2 right-2 h-6 w-6 p-0 text-neutral-400 hover:text-white z-10"
+          className="absolute top-2 right-2 z-10 h-6 w-6 p-0 text-neutral-400 hover:text-white"
           aria-label="Close"
         >
           <X className="h-3 w-3" />
         </Button>
         <form
-          className="flex flex-col mt-2"
+          className="mt-2 flex flex-col"
           onSubmit={async (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -104,11 +130,11 @@ export function TaskForm({ accountId, categories, defaultCategoryId, onSuccess, 
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder="Title"
-                    className="border-none shadow-none rounded-md bg-transparent dark:bg-transparent focus:ring-0 dark:focus:ring-0 placeholder:text-neutral-400"
+                    className="rounded-md border-none bg-transparent shadow-none placeholder:text-neutral-400 focus:ring-0 dark:bg-transparent dark:focus:ring-0"
                     autoFocus
                   />
                   {field.state.meta.errors.length > 0 && (
-                    <span className="text-xs text-red-500 mt-1">
+                    <span className="mt-1 text-xs text-red-500">
                       {getErrorMessage(field.state.meta.errors[0])}
                     </span>
                   )}
@@ -129,7 +155,7 @@ export function TaskForm({ accountId, categories, defaultCategoryId, onSuccess, 
                     onChange={(e) => field.handleChange(e.target.value)}
                     onBlur={field.handleBlur}
                     placeholder="Description"
-                    className="border-none shadow-none rounded-md bg-transparent dark:bg-transparent focus:ring-0 dark:focus:ring-0 resize-none min-h-[60px]"
+                    className="min-h-[60px] resize-none rounded-md border-none bg-transparent shadow-none focus:ring-0 dark:bg-transparent dark:focus:ring-0"
                   />
                 </div>
               )}
@@ -143,10 +169,12 @@ export function TaskForm({ accountId, categories, defaultCategoryId, onSuccess, 
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1 justify-start text-left font-normal border-none h-auto rounded-full bg-neutral-800"
+                        className="h-auto flex-1 justify-start rounded-full border-none bg-neutral-800 text-left font-normal"
                       >
                         <CalendarIcon className="size-4" />
-                        {field.state.value ? format(field.state.value, "dd MMM") : "Date"}
+                        {field.state.value
+                          ? format(field.state.value, "dd MMM")
+                          : "Date"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -177,19 +205,21 @@ export function TaskForm({ accountId, categories, defaultCategoryId, onSuccess, 
                         field.handleBlur();
                       }}
                     >
-                      <SelectTrigger className="border-none shadow-none rounded-full bg-neutral-800">
+                      <SelectTrigger className="rounded-full border-none bg-neutral-800 shadow-none">
                         <SelectValue placeholder="Category" />
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((category) => (
                           <SelectItem key={category.id} value={category.id}>
-                            <span className="line-clamp-1">{category.title}</span>
+                            <span className="line-clamp-1">
+                              {category.title}
+                            </span>
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                     {field.state.meta.errors.length > 0 && (
-                      <span className="text-xs text-red-500 mt-1">
+                      <span className="mt-1 text-xs text-red-500">
                         {getErrorMessage(field.state.meta.errors[0])}
                       </span>
                     )}
@@ -214,14 +244,14 @@ export function TaskForm({ accountId, categories, defaultCategoryId, onSuccess, 
   );
 }
 
-export function AddTask({ 
-  accountId, 
-  categoryId, 
-  categories, 
+export function AddTask({
+  accountId,
+  categoryId,
+  categories,
   isOpen,
   onOpen,
   onSuccess,
-  onCancel
+  onCancel,
 }: {
   accountId: string;
   categoryId: string;
@@ -245,18 +275,12 @@ export function AddTask({
 
   return (
     <SidebarMenuItem className="group/item">
-      <SidebarMenuButton
-        onClick={onOpen}
-        className="hover:bg-neutral-600/20"
-      >
+      <SidebarMenuButton onClick={onOpen} className="hover:bg-neutral-600/20">
         <div className="relative flex items-center">
-          <Plus className="h-4 w-4 mr-2" />
-          <span className="line-clamp-1 block select-none">
-            Add task
-          </span>
+          <Plus className="mr-2 h-4 w-4" />
+          <span className="line-clamp-1 block select-none">Add task</span>
         </div>
       </SidebarMenuButton>
     </SidebarMenuItem>
   );
 }
-  

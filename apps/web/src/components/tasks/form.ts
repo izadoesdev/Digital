@@ -12,7 +12,10 @@ export const { useAppForm, withForm } = createFormHook({
 });
 
 export const taskFormSchema = z.object({
-  title: z.string().min(1, "Title is required").refine((val) => val.trim().length > 0, "Title cannot be empty"),
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .refine((val) => val.trim().length > 0, "Title cannot be empty"),
   notes: z.string().optional(),
   due: z.date().optional(),
   status: z.enum(["needsAction", "completed", "cancelled"]),
@@ -27,4 +30,4 @@ export const defaultTaskValues: TaskFormValues = {
   due: new Date(),
   status: "needsAction",
   categoryId: "",
-}; 
+};

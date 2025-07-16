@@ -6,11 +6,13 @@ import type {
 import { Temporal } from "temporal-polyfill";
 
 import { CALENDAR_DEFAULTS } from "../../constants/calendar";
-import { CreateCalendarInput, UpdateCalendarInput } from "../../schemas/calendars";
+import {
+  CreateCalendarInput,
+  UpdateCalendarInput,
+} from "../../schemas/calendars";
 import { CreateEventInput, UpdateEventInput } from "../../schemas/events";
-import type { Calendar, CalendarEvent, CalendarProvider } from "../interfaces";
 import { assignColor } from "../colors";
-
+import type { Calendar, CalendarEvent, CalendarProvider } from "../interfaces";
 import {
   calendarPath,
   eventResponseStatusPath,

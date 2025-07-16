@@ -1,13 +1,13 @@
-import { taskProcedure, createTRPCRouter } from "../trpc";
-import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+
+import { createTRPCRouter, taskProcedure } from "../trpc";
 
 export const tasksRouter = createTRPCRouter({
   list: taskProcedure.query(async ({ ctx }) => {
     const accounts = await Promise.all(
       ctx.providers.map(async ({ client, account }) => {
         const tasks = await client.tasks();
-
 
         return {
           id: account.accountId,
@@ -63,7 +63,9 @@ export const tasksRouter = createTRPCRouter({
         });
       }
 
-      const tasks = await taskClient.client.tasksForCategory({ id: categoryId });
+      const tasks = await taskClient.client.tasksForCategory({
+        id: categoryId,
+      });
 
       return { tasks };
     }),
@@ -96,7 +98,10 @@ export const tasksRouter = createTRPCRouter({
         });
       }
 
-      const createdTask = await taskClient.client.createTask({ id: categoryId }, task);
+      const createdTask = await taskClient.client.createTask(
+        { id: categoryId },
+        task,
+      );
 
       return { task: createdTask };
     }),
@@ -130,7 +135,10 @@ export const tasksRouter = createTRPCRouter({
         });
       }
 
-      const updatedTask = await taskClient.client.updateTask({ id: categoryId }, task);
+      const updatedTask = await taskClient.client.updateTask(
+        { id: categoryId },
+        task,
+      );
 
       return { task: updatedTask };
     }),

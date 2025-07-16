@@ -34,11 +34,11 @@ export function getErrorMessage(error: unknown): string {
   if (typeof error === "string") {
     return error;
   }
-  
+
   if (error && typeof error === "object" && "message" in error) {
     return String(error.message);
   }
-  
+
   // Handle zod validation errors
   if (error && typeof error === "object" && "issues" in error) {
     const issues = (error as any).issues;
@@ -46,6 +46,6 @@ export function getErrorMessage(error: unknown): string {
       return issues[0].message || "Invalid value";
     }
   }
-  
+
   return "Invalid value";
-} 
+}

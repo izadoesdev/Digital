@@ -1,6 +1,11 @@
-import { GoogleTasks} from "@repo/google-tasks";
-import type { ProviderOptions, TaskProvider, Task, Category } from "../interfaces";
+import { GoogleTasks } from "@repo/google-tasks";
 
+import type {
+  Category,
+  ProviderOptions,
+  Task,
+  TaskProvider,
+} from "../interfaces";
 
 export class GoogleTasksProvider implements TaskProvider {
   public providerId = "google" as const;
@@ -29,25 +34,33 @@ export class GoogleTasksProvider implements TaskProvider {
   }
 
   async tasks(): Promise<Task[]> {
-    const { items: categories } = await this.client.tasks.v1.users.me.lists.list();
+    const { items: categories } =
+      await this.client.tasks.v1.users.me.lists.list();
 
     const results = await Promise.all(
       categories?.map(async (category) => {
         return await this.client.tasks.v1.lists.tasks.list(category.id!);
-      }) ?? []
+      }) ?? [],
     );
-  
+
     const tasks = results.flatMap((result) => result.items ?? []);
 
-    console.log(tasks)
-  
+    console.log(tasks);
+
     return tasks
       .filter((task) => task.id && task.title)
-      .map((task) => (
-        {
+      .map((task) => ({
         id: task.id!,
-        categoryId: GoogleTasksProvider.TASK_LIST_ID_REGEX.exec(task.selfLink ?? "")?.[1],
-        categoryTitle: categories?.find((category) => category.id === GoogleTasksProvider.TASK_LIST_ID_REGEX.exec(task.selfLink ?? "")?.[1])?.title,
+        categoryId: GoogleTasksProvider.TASK_LIST_ID_REGEX.exec(
+          task.selfLink ?? "",
+        )?.[1],
+        categoryTitle: categories?.find(
+          (category) =>
+            category.id ===
+            GoogleTasksProvider.TASK_LIST_ID_REGEX.exec(
+              task.selfLink ?? "",
+            )?.[1],
+        )?.title,
         title: task.title,
         status: task.status,
         completed: task.completed,
@@ -55,7 +68,6 @@ export class GoogleTasksProvider implements TaskProvider {
         due: task.due,
       }));
   }
-  
 
   async tasksForCategory(category: Category): Promise<Task[]> {
     const { items } = await this.client.tasks.v1.lists.tasks.list(category.id!);
@@ -77,7 +89,10 @@ export class GoogleTasksProvider implements TaskProvider {
   }
 
   async createTask(category: Category, task: Omit<Task, "id">): Promise<Task> {
-    const { id } = await this.client.tasks.v1.lists.tasks.create(category.id!, task);
+    const { id } = await this.client.tasks.v1.lists.tasks.create(
+      category.id!,
+      task,
+    );
     return {
       id: id!,
       categoryId: category.id!,
@@ -86,23 +101,30 @@ export class GoogleTasksProvider implements TaskProvider {
   }
 
   async updateTask(category: Category, task: Partial<Task>): Promise<Task> {
-    console.log(task)
+    console.log(task);
     const map = { completed: "completed", notStarted: "needsAction" } as const;
-    const status = task.status ? map[task.status as keyof typeof map] ?? "" : undefined;
-  
+    const status = task.status
+      ? (map[task.status as keyof typeof map] ?? "")
+      : undefined;
+
     const { id } = await this.client.tasks.v1.lists.tasks.update(task.id!, {
       tasklist: category.id!,
       ...task,
       ...(status && { status }),
     });
-  
-    return { id: id!, categoryId: category.id!, ...task, ...(status && { status }) };
+
+    return {
+      id: id!,
+      categoryId: category.id!,
+      ...task,
+      ...(status && { status }),
+    };
   }
-  
 
   async deleteTask(category: Category, taskId: string): Promise<void> {
-    await this.client.tasks.v1.lists.tasks.delete(taskId, {tasklist: category.id!});
+    await this.client.tasks.v1.lists.tasks.delete(taskId, {
+      tasklist: category.id!,
+    });
     return;
   }
-
 }

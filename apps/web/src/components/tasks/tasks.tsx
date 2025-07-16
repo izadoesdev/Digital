@@ -2,8 +2,8 @@
 
 import { Fragment, useCallback, useMemo, useRef, useState } from "react";
 import { useResizeObserver } from "@react-hookz/web";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronRight, Plus, Calendar, X, CalendarIcon } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Calendar, CalendarIcon, ChevronRight, Plus, X } from "lucide-react";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -25,7 +25,6 @@ import { useTRPC } from "@/lib/trpc/client";
 import { cn } from "@/lib/utils";
 import { AddTask } from "./task-form";
 
-
 export type Task = {
   id: string;
   title?: string;
@@ -35,7 +34,7 @@ export type Task = {
   completed?: string;
   notes?: string;
   due?: string;
-}
+};
 
 function useTaskList() {
   const trpc = useTRPC();
@@ -47,7 +46,10 @@ export function Tasks() {
   const { data, isLoading } = useTaskList();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const [openAddTask, setOpenAddTask] = useState<{ accountId: string; categoryId: string } | null>(null);
+  const [openAddTask, setOpenAddTask] = useState<{
+    accountId: string;
+    categoryId: string;
+  } | null>(null);
 
   const updateTaskMutation = useMutation(
     trpc.tasks.updateTask.mutationOptions({
@@ -55,7 +57,7 @@ export function Tasks() {
         // Invalidate and refetch the tasks list
         queryClient.invalidateQueries({ queryKey: trpc.tasks.list.queryKey() });
       },
-    })
+    }),
   );
 
   if (isLoading) {
@@ -68,11 +70,14 @@ export function Tasks() {
 
   // Helper to group and sort tasks by category
   function getGroupedCategories(tasks: Task[]) {
-    const grouped = tasks.reduce((acc, task) => {
-      const categoryId = task.categoryId || "";
-      (acc[categoryId] ||= []).push(task);
-      return acc;
-    }, {} as Record<string, Task[]>);
+    const grouped = tasks.reduce(
+      (acc, task) => {
+        const categoryId = task.categoryId || "";
+        (acc[categoryId] ||= []).push(task);
+        return acc;
+      },
+      {} as Record<string, Task[]>,
+    );
 
     return Object.keys(grouped)
       .sort((a, b) => {
@@ -86,7 +91,6 @@ export function Tasks() {
         tasks: grouped[categoryId],
       }));
   }
-
 
   return (
     <div className="relative flex scrollbar-hidden flex-1 flex-col gap-2 overflow-auto">
@@ -117,11 +121,15 @@ export function Tasks() {
                               updateTaskMutation={updateTaskMutation}
                             />
                           ))}
-                          {openAddTask?.accountId === account.id && openAddTask?.categoryId === category.id ? (
+                          {openAddTask?.accountId === account.id &&
+                          openAddTask?.categoryId === category.id ? (
                             <AddTask
                               accountId={account.id}
                               categoryId={category.id}
-                              categories={groupedCategories.map(cat => ({ id: cat.id, title: cat.title }))}
+                              categories={groupedCategories.map((cat) => ({
+                                id: cat.id,
+                                title: cat.title,
+                              }))}
                               onSuccess={() => setOpenAddTask(null)}
                               onCancel={() => setOpenAddTask(null)}
                               isOpen={true}
@@ -130,8 +138,16 @@ export function Tasks() {
                             <AddTask
                               accountId={account.id}
                               categoryId={category.id}
-                              categories={groupedCategories.map(cat => ({ id: cat.id, title: cat.title }))}
-                              onOpen={() => setOpenAddTask({ accountId: account.id, categoryId: category.id })}
+                              categories={groupedCategories.map((cat) => ({
+                                id: cat.id,
+                                title: cat.title,
+                              }))}
+                              onOpen={() =>
+                                setOpenAddTask({
+                                  accountId: account.id,
+                                  categoryId: category.id,
+                                })
+                              }
                               isOpen={false}
                             />
                           )}
@@ -164,17 +180,15 @@ function TasksSkeleton() {
             </div>
           </div>
           <div className="space-y-1 pl-0.5">
-            {Array.from({ length: account.tasks }).map(
-              (_, taskIndex) => (
-                <div
-                  key={taskIndex}
-                  className="flex items-center gap-2 px-2 py-2"
-                >
-                  <Skeleton className="h-4 w-4 rounded bg-neutral-500/20" />
-                  <Skeleton className="animate-shimmer h-4 flex-1 bg-neutral-500/20" />
-                </div>
-              ),
-            )}
+            {Array.from({ length: account.tasks }).map((_, taskIndex) => (
+              <div
+                key={taskIndex}
+                className="flex items-center gap-2 px-2 py-2"
+              >
+                <Skeleton className="h-4 w-4 rounded bg-neutral-500/20" />
+                <Skeleton className="animate-shimmer h-4 flex-1 bg-neutral-500/20" />
+              </div>
+            ))}
           </div>
         </div>
       ))}
@@ -205,10 +219,15 @@ function AccountName({ name }: { name: string }) {
   );
 }
 
-function TaskItem({ item, accountId, categoryId, updateTaskMutation }: {
-  item: Task,
-  accountId: string,
-  categoryId: string,
+function TaskItem({
+  item,
+  accountId,
+  categoryId,
+  updateTaskMutation,
+}: {
+  item: Task;
+  accountId: string;
+  categoryId: string;
   updateTaskMutation: any;
 }) {
   const textRef = useRef<HTMLSpanElement>(null);
@@ -255,8 +274,8 @@ function TaskItem({ item, accountId, categoryId, updateTaskMutation }: {
           />
           <span
             ref={textRef}
-            className={cn('line-clamp-1 block select-none', {
-              'line-through opacity-50': !!item.completed,
+            className={cn("line-clamp-1 block select-none", {
+              "line-through opacity-50": !!item.completed,
             })}
           >
             {item.title}
@@ -266,4 +285,3 @@ function TaskItem({ item, accountId, categoryId, updateTaskMutation }: {
     </SidebarMenuItem>
   );
 }
-

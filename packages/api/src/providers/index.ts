@@ -2,10 +2,14 @@ import { account } from "@repo/db/schema";
 
 import { GoogleCalendarProvider } from "./calendars/google-calendar";
 import { MicrosoftCalendarProvider } from "./calendars/microsoft-calendar";
-import type { CalendarProvider, ConferencingProvider, TaskProvider } from "./interfaces";
-import { GoogleTasksProvider } from "./tasks/google-tasks";
 import { GoogleMeetProvider } from "./conferencing/google-meet";
 import { ZoomProvider } from "./conferencing/zoom";
+import type {
+  CalendarProvider,
+  ConferencingProvider,
+  TaskProvider,
+} from "./interfaces";
+import { GoogleTasksProvider } from "./tasks/google-tasks";
 
 const supportedProviders = {
   google: GoogleCalendarProvider,
@@ -30,7 +34,7 @@ export function accountToProvider(
 
   const Provider =
     supportedProviders[
-    activeAccount.providerId as keyof typeof supportedProviders
+      activeAccount.providerId as keyof typeof supportedProviders
     ];
 
   if (!Provider) {
@@ -57,9 +61,11 @@ export function accountToConferencingProvider(
     throw new Error("Conferencing provider not supported");
   }
 
-  return new Provider({ accessToken: activeAccount.accessToken, accountId: activeAccount.accountId });
+  return new Provider({
+    accessToken: activeAccount.accessToken,
+    accountId: activeAccount.accountId,
+  });
 }
-
 
 export function accountToTasksProvider(
   activeAccount: typeof account.$inferSelect,

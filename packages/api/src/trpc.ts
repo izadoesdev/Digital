@@ -86,29 +86,25 @@ export const calendarProcedure = protectedProcedure.use(
   },
 );
 
+export const taskProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  try {
+    const accounts = await getAccounts(ctx.user, ctx.headers);
 
+    const providers = accounts.map((account) => ({
+      account,
+      client: accountToTasksProvider(account),
+    }));
 
-export const taskProcedure = protectedProcedure.use(
-  async ({ ctx, next }) => {
-    try {
-      const accounts = await getAccounts(ctx.user, ctx.headers);
-
-      const providers = accounts.map((account) => ({
-        account,
-        client: accountToTasksProvider(account),
-      }));
-
-      return next({
-        ctx: {
-          providers,
-          accounts,
-        },
-      });
-    } catch (error) {
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
-  },
-);
+    return next({
+      ctx: {
+        providers,
+        accounts,
+      },
+    });
+  } catch (error) {
+    throw new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
