@@ -69,7 +69,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${satoshi.variable} flex min-h-screen flex-col antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${satoshi.variable} flex min-h-screen flex-col`}
       >
         <Providers>
           <Toaster richColors closeButton position="bottom-right" />
