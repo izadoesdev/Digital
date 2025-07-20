@@ -254,13 +254,17 @@ export function EventForm({
                     <AttendeeList
                       className={cn(field.state.value.length > 0 && "py-2")}
                     >
-                      {field.state.value.map((v, i) => {
+                      {field.state.value.filter(Boolean).map((v, i) => {
                         return (
                           <form.Field
                             key={`${field.name}-${v.email}`}
                             name={`attendees[${i}]`}
                           >
                             {(subField) => {
+                              if (!subField.state.value) {
+                                return null;
+                              }
+
                               return (
                                 <AttendeeListItem
                                   name={subField.state.value.name}
@@ -288,6 +292,7 @@ export function EventForm({
                       )}
                       onComplete={(email) => {
                         field.pushValue({
+                          name: "",
                           email,
                           status: "unknown",
                           type: "required",

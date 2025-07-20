@@ -1,7 +1,7 @@
 import * as React from "react";
 
+import { EventCollectionItem } from "@/components/event-calendar/hooks/event-collection";
 import { EventGap, EventHeight } from "../constants";
-import type { CalendarEvent } from "../types";
 import {
   getOverflowEvents,
   organizeEventsWithOverflow,
@@ -9,8 +9,8 @@ import {
 } from "../utils/multi-day-layout";
 
 interface UseMultiDayOverflowOptions {
-  events: CalendarEvent[];
-  timeZone?: string;
+  events: EventCollectionItem[];
+  timeZone: string;
   eventHeight?: number;
   eventGap?: number;
   minVisibleLanes?: number;
@@ -20,15 +20,15 @@ interface UseMultiDayOverflowResult {
   containerRef: React.RefObject<HTMLDivElement | null>;
   availableHeight: number;
   capacityInfo: EventCapacityInfo;
-  visibleEvents: CalendarEvent[];
-  overflowEvents: CalendarEvent[];
+  visibleEvents: EventCollectionItem[];
+  overflowEvents: EventCollectionItem[];
   hasOverflow: boolean;
   overflowCount: number;
 }
 
 export function useMultiDayOverflow({
   events,
-  timeZone = "UTC",
+  timeZone,
   eventHeight = EventHeight,
   eventGap = EventGap,
   minVisibleLanes,
@@ -72,27 +72,49 @@ export function useMultiDayOverflow({
   }, [measureHeight]);
 
   // Calculate capacity and organize events
-  const capacityInfo = organizeEventsWithOverflow(
-    events,
-    minVisibleLanes
-      ? Math.max(minVisibleLanes * (eventHeight + eventGap), availableHeight)
-      : availableHeight,
-    timeZone,
-    eventHeight,
-    eventGap,
+  const capacityInfo = React.useMemo(
+    () =>
+      organizeEventsWithOverflow(
+        events,
+        minVisibleLanes
+          ? Math.max(
+              minVisibleLanes * (eventHeight + eventGap),
+              availableHeight,
+            )
+          : availableHeight,
+        timeZone,
+        eventHeight,
+        eventGap,
+      ),
+    [events, minVisibleLanes, eventHeight, eventGap, availableHeight, timeZone],
   );
 
   // Get visible and overflow events
-  const visibleEvents = capacityInfo.visibleLanes.flat();
-  const overflowEvents = getOverflowEvents(capacityInfo);
+  const visibleEvents = React.useMemo(
+    () => capacityInfo.visibleLanes.flat(),
+    [capacityInfo.visibleLanes],
+  );
+  const overflowEvents = React.useMemo(
+    () => getOverflowEvents(capacityInfo),
+    [capacityInfo],
+  );
 
-  return {
-    containerRef,
-    availableHeight,
-    capacityInfo,
-    visibleEvents,
-    overflowEvents,
-    hasOverflow: capacityInfo.hasOverflow,
-    overflowCount: capacityInfo.overflowCount,
-  };
+  return React.useMemo(
+    () => ({
+      containerRef,
+      availableHeight,
+      capacityInfo,
+      visibleEvents,
+      overflowEvents,
+      hasOverflow: capacityInfo.hasOverflow,
+      overflowCount: capacityInfo.overflowCount,
+    }),
+    [
+      containerRef,
+      availableHeight,
+      capacityInfo,
+      visibleEvents,
+      overflowEvents,
+    ],
+  );
 }

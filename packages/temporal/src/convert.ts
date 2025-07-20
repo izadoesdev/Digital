@@ -1,3 +1,4 @@
+import { tzDate } from "@formkit/tempo";
 import { Temporal } from "temporal-polyfill";
 
 interface ToDateOptions {
@@ -6,7 +7,29 @@ interface ToDateOptions {
 }
 
 export function toDate({ value, timeZone }: ToDateOptions): Date {
-  return new Date(toInstant({ value, timeZone }).toString());
+  if (value instanceof Temporal.PlainDate) {
+    return tzDate(
+      new Date(value.toString({ calendarName: "never" })),
+      timeZone,
+    );
+  }
+
+  if (value instanceof Temporal.Instant) {
+    return tzDate(new Date(value.epochMilliseconds), timeZone);
+  }
+
+  return tzDate(
+    new Date(
+      value.year,
+      value.month - 1,
+      value.day,
+      value.hour,
+      value.minute,
+      value.second,
+      value.millisecond,
+    ),
+    timeZone,
+  );
 }
 
 interface ToInstantOptions {

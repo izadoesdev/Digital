@@ -26,3 +26,11 @@ export const calendarSettingsAtom = atomWithStorage<CalendarSettings>(
 export function useCalendarSettings() {
   return useAtomValue(calendarSettingsAtom);
 }
+
+export function useDefaultTimeZone() {
+  return useAtomValue(calendarSettingsAtom).defaultTimeZone;
+}
+
+export function useWeekStartsOn() {
+  return useAtomValue(calendarSettingsAtom).weekStartsOn;
+}

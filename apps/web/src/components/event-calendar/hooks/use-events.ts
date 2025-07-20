@@ -1,20 +1,15 @@
-import { useMemo } from "react";
+import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as R from "remeda";
 import { toast } from "sonner";
-import { Temporal } from "temporal-polyfill";
 
-import {
-  compareTemporal,
-  endOfDay,
-  endOfWeek,
-  startOfDay,
-  startOfWeek,
-} from "@repo/temporal";
+import { compareTemporal } from "@repo/temporal";
+import { endOfMonth, startOfMonth } from "@repo/temporal/v2";
 
 import { useCalendarSettings } from "@/atoms";
 import { useCalendarState } from "@/hooks/use-calendar-state";
 import { useTRPC } from "@/lib/trpc/client";
+import { mapEventsToItems } from "./event-collection";
 
 const TIME_RANGE_DAYS_PAST = 30;
 const TIME_RANGE_DAYS_FUTURE = 30;
@@ -33,55 +28,32 @@ export function useEvents() {
   const queryClient = useQueryClient();
   const { currentDate } = useCalendarState();
 
-  const { defaultTimeZone, weekStartsOn } = useCalendarSettings();
+  const { defaultTimeZone } = useCalendarSettings();
 
-  const timeMin = useMemo(() => {
-    const base = Temporal.PlainDate.from(
-      currentDate.toISOString().split("T")[0]!,
-    )
+  const { timeMin, timeMax } = React.useMemo(() => {
+    const start = currentDate
       .subtract({
-        days: TIME_RANGE_DAYS_PAST,
+        days: 30,
       })
       .toZonedDateTime({
         timeZone: defaultTimeZone,
       });
 
-    const start = startOfWeek({
-      value: base,
-      timeZone: defaultTimeZone,
-      weekStartsOn,
-    });
-
-    return startOfDay({
-      value: start,
-      timeZone: defaultTimeZone,
-    });
-  }, [defaultTimeZone, currentDate, weekStartsOn]);
-
-  const timeMax = useMemo(() => {
-    const base = Temporal.PlainDate.from(
-      currentDate.toISOString().split("T")[0]!,
-    )
+    const end = currentDate
       .add({
-        days: TIME_RANGE_DAYS_FUTURE,
+        days: 30,
       })
       .toZonedDateTime({
         timeZone: defaultTimeZone,
       });
 
-    const start = endOfWeek({
-      value: base,
-      timeZone: defaultTimeZone,
-      weekStartsOn,
-    });
+    return {
+      timeMin: startOfMonth(start),
+      timeMax: endOfMonth(end),
+    };
+  }, [defaultTimeZone, currentDate]);
 
-    return endOfDay({
-      value: start,
-      timeZone: defaultTimeZone,
-    });
-  }, [defaultTimeZone, currentDate, weekStartsOn]);
-
-  const eventsQueryKey = useMemo(
+  const eventsQueryKey = React.useMemo(
     () =>
       trpc.events.list.queryOptions({ timeMin, timeMax, defaultTimeZone })
         .queryKey,
@@ -96,11 +68,12 @@ export function useEvents() {
     }),
   );
 
-  const events = useMemo(() => {
+  const events = React.useMemo(() => {
     if (!query.data?.events) return [];
 
-    return query.data.events;
-  }, [query.data]);
+    // Map to EventCollectionItem early with default time zone
+    return mapEventsToItems(query.data.events, defaultTimeZone);
+  }, [query.data, defaultTimeZone]);
 
   const createMutation = useMutation(
     trpc.events.create.mutationOptions({

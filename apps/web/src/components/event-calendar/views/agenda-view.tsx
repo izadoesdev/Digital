@@ -2,19 +2,24 @@
 
 import * as React from "react";
 import { RiCalendarEventLine } from "@remixicon/react";
-import { addDays, format, isToday } from "date-fns";
+import { format } from "date-fns";
+import { Temporal } from "temporal-polyfill";
 
+import { isToday } from "@repo/temporal/v2";
+
+import { useCalendarSettings } from "@/atoms/calendar-settings";
 import {
   AgendaDaysToShow,
   CalendarEvent,
   EventItem,
 } from "@/components/event-calendar";
+import { type EventCollectionItem } from "@/components/event-calendar/hooks/event-collection";
 import type { Action } from "@/components/event-calendar/hooks/use-optimistic-events";
 import { getAllEventsForDay } from "@/components/event-calendar/utils";
 
 interface AgendaViewProps {
-  currentDate: Date;
-  events: CalendarEvent[];
+  currentDate: Temporal.PlainDate;
+  events: EventCollectionItem[];
   dispatchAction: (action: Action) => void;
 }
 
@@ -26,19 +31,24 @@ export function AgendaView({
   // Show events for the next days based on constant
   const days = React.useMemo(() => {
     return Array.from({ length: AgendaDaysToShow }, (_, i) =>
-      addDays(new Date(currentDate), i),
+      currentDate.add({ days: i }),
     );
   }, [currentDate]);
 
-  const handleEventClick = (event: CalendarEvent, e: React.MouseEvent) => {
-    e.stopPropagation();
-    dispatchAction({ type: "select", event });
-  };
+  const handleEventClick = React.useCallback(
+    (event: CalendarEvent, e: React.MouseEvent) => {
+      e.stopPropagation();
+      dispatchAction({ type: "select", event });
+    },
+    [dispatchAction],
+  );
+
+  const settings = useCalendarSettings();
 
   // Check if there are any days with events
-  const hasEvents = days.some(
-    (day) => getAllEventsForDay(events, day).length > 0,
-  );
+  const hasEvents = days.some((day) => {
+    return getAllEventsForDay(events, day, settings.defaultTimeZone).length > 0;
+  });
 
   return (
     <div className="border-t border-border/70 px-4">
@@ -55,9 +65,13 @@ export function AgendaView({
         </div>
       ) : (
         days.map((day) => {
-          const dayEvents = getAllEventsForDay(events, day);
+          const dayEventItems = getAllEventsForDay(
+            events,
+            day,
+            settings.defaultTimeZone,
+          );
 
-          if (dayEvents.length === 0) return null;
+          if (dayEventItems.length === 0) return null;
 
           return (
             <div
@@ -66,17 +80,20 @@ export function AgendaView({
             >
               <span
                 className="absolute -top-3 left-0 flex h-6 items-center bg-background pe-4 text-[10px] uppercase data-today:font-medium sm:pe-4 sm:text-xs"
-                data-today={isToday(day) || undefined}
+                data-today={
+                  isToday(day, { timeZone: settings.defaultTimeZone }) ||
+                  undefined
+                }
               >
-                {format(day, "d MMM, EEEE")}
+                {format(day.toString(), "d MMM, EEEE")}
               </span>
               <div className="mt-6 space-y-2">
-                {dayEvents.map((event) => (
+                {dayEventItems.map((eventItem) => (
                   <EventItem
-                    key={event.id}
-                    event={event}
+                    key={eventItem.event.id}
+                    event={eventItem.event}
                     view="agenda"
-                    onClick={(e) => handleEventClick(event, e)}
+                    onClick={(e) => handleEventClick(eventItem.event, e)}
                   />
                 ))}
               </div>
