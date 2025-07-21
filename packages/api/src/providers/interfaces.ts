@@ -35,6 +35,11 @@ export interface CalendarEvent {
   providerId: "google" | "microsoft";
   accountId: string;
   calendarId: string;
+  /** Current user's response status for this event */
+  response?: {
+    status: AttendeeStatus;
+    comment?: string;
+  };
   metadata?: Record<string, unknown>;
   conference?: Conference;
 }
@@ -47,6 +52,12 @@ export interface Attendee {
   type: "required" | "optional" | "resource";
   comment?: string; // Google only
   additionalGuests?: number; // Google only
+}
+
+export interface ResponseToEventInput {
+  status: "accepted" | "tentative" | "declined" | "unknown";
+  comment?: string;
+  sendUpdate: boolean;
 }
 
 export type AttendeeStatus = Attendee["status"];
@@ -81,10 +92,7 @@ export interface CalendarProvider {
   responseToEvent(
     calendarId: string,
     eventId: string,
-    response: {
-      status: "accepted" | "tentative" | "declined";
-      comment?: string;
-    },
+    response: ResponseToEventInput,
   ): Promise<void>;
 }
 

@@ -55,6 +55,21 @@ function parseDateTime({ dateTime, timeZone }: GoogleCalendarDateTime) {
   return instant.toZonedDateTimeISO(timeZone);
 }
 
+function parseResponseStatus(event: GoogleCalendarEvent) {
+  const selfAttendee = event.attendees?.find((a) => a.self);
+
+  if (!selfAttendee) {
+    return undefined;
+  }
+
+  return {
+    status: parseGoogleCalendarAttendeeStatus(
+      selfAttendee.responseStatus as GoogleCalendarEventAttendeeResponseStatus,
+    ),
+    comment: selfAttendee.comment,
+  };
+}
+
 interface ParsedGoogleCalendarEventOptions {
   calendar: Calendar;
   accountId: string;
@@ -67,6 +82,7 @@ export function parseGoogleCalendarEvent({
   event,
 }: ParsedGoogleCalendarEventOptions): CalendarEvent {
   const isAllDay = !event.start?.dateTime;
+  const response = parseResponseStatus(event);
 
   return {
     // ID should always be present if not defined Google Calendar will generate one
@@ -89,6 +105,7 @@ export function parseGoogleCalendarEvent({
     calendarId: calendar.id,
     readOnly: calendar.readOnly,
     conference: parseGoogleCalendarConferenceData(event),
+    ...(response && { response }),
   };
 }
 
@@ -378,6 +395,7 @@ export function parseGoogleCalendarAttendee(
       attendee.responseStatus as GoogleCalendarEventAttendeeResponseStatus,
     ),
     type: parseGoogleCalendarAttendeeType(attendee),
+    comment: attendee.comment,
     additionalGuests: attendee.additionalGuests,
   };
 }
